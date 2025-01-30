@@ -4,7 +4,7 @@
 1. Клонировать репозиторий:
 
 ```
-
+https://github.com/aleksanderslepow97/Django_Habit_Tracker_CW
 ```
 
 2. Установка зависимостей:
