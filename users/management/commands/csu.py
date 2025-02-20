@@ -1,12 +1,20 @@
 from django.core.management import BaseCommand
-from users.models import CustomsUser
+
+from users.models import User
 
 
 class Command(BaseCommand):
-    def handle(self, *args, **kwargs):
-        user = CustomsUser.objects.create(email="admin@mail.ru")
-        user.is_staff = True
+    def handle(self, *args, **options):
+        email = "admin@example.com"
+        password = "1234"
+        user = User.objects.create(email=email)
+        user.set_password(password)
         user.is_active = True
         user.is_superuser = True
-        user.set_password("852123654")
+        user.is_staff = True
         user.save()
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Создан администратор\nemail для входа: {email}\nпароль: {password}"
+            )
+        )
