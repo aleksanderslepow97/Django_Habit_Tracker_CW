@@ -1,4 +1,4 @@
-# Django Habit Tracker
+# Django Habit Tracker.
 
 ---
 
