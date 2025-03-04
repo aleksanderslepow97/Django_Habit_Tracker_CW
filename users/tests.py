@@ -2,68 +2,51 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import User
+from users.models import User
 
 
-class UserTests(APITestCase):
-
+class UserTestCase(APITestCase):
     def setUp(self):
-        self.user_data = {
-            "email": "testuser@example.com",
-            "password": "testpassword",
-            "phone": "1234567890",
-            "avatar": None,
-            "tg_nick": "testnick",
-            "tg_chat_id": "1295919455",
-        }
-        self.user = User.objects.create_user(**self.user_data)
-
-    def test_create_user(self):
-        """Проверка создания нового пользователя."""
-        User.objects.all().delete()
-        url = reverse("users:users-list")  # Замените на правильный URL
-        response = self.client.post(url, self.user_data, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(User.objects.count(), 1)  # Один уже создан в setUp
-        self.assertEqual(
-            User.objects.get(email="testuser@example.com").email, "testuser@example.com"
-        )
-
-    def test_create_user_without_email(self):
-        url = reverse("users:users-list")
-        data = self.user_data.copy()
-        data["email"] = ""
-        response = self.client.post(url, data, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("email", response.data)
-
-    def test_create_superuser(self):
-        url = reverse("users:users-list")
-        superuser_data = {
-            "email": "superuser@example.com",
-            "password": "superpassword",
-            "is_staff": True,
-            "is_superuser": True,
-        }
-        response = self.client.post(url, superuser_data, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            User.objects.count(), 2
-        )  # Один из setUp и один суперпользователь
-        self.assertTrue(User.objects.get(email="superuser@example.com").is_superuser)
+        self.user = User.objects.create(email="test1@test1.ru",)
+        self.client.force_authenticate(user=self.user)
 
     def test_user_list(self):
-        url = reverse("users:users-list")
+        url = reverse("users:user-list")
         response = self.client.get(url)
+        data = response.json()
+        result = [{"id": self.user.pk, "email": "test1@test1.ru"}]
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(data, result)
 
-    def test_user_detail(self):
-        url = reverse("users:users-list") + f"{self.user.id}/"
+    def test_user_retrieve(self):
+        url = reverse("users:user-detail", args=(self.user.pk,))
         response = self.client.get(url)
+        data = response.json()
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["email"], self.user.email)
+        self.assertEqual(data.get("email"), self.user.email)
+
+    def test_user_create(self):
+        url = reverse("users:user-list")
+        data = {"email": "test2@test2.ru", "password": "123qwe456rty"}
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(User.objects.all().count(), 2)
+
+    def test_user_update(self):
+        url = reverse("users:user-detail", args=(self.user.pk,))
+        data = {"tg_chat_id": 123, "password": "123"}
+        response = self.client.patch(url, data)
+        data = response.json()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data.get("tg_chat_id"), "123")
+
+    def test_lesson_delete(self):
+        url = reverse("users:user-detail", args=(self.user.pk,))
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(User.objects.all().count(), 0)

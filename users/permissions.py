@@ -1,16 +1,15 @@
-from rest_framework.permissions import SAFE_METHODS, BasePermission
+from rest_framework import permissions
 
 
-class IsOwnerOrReadOnly(BasePermission):
-    """Проверяет, является ли пользователь создателем."""
-
-    message = "Вы не являетесь создателем этой привычки!"
-
+class IsOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        if obj.is_public:
+        if obj.user == request.user:
             return True
-        return obj.user == request.user
+        return False
 
-    def has_permission(self, request, view):
 
-        return request.method in SAFE_METHODS or request.user.is_authenticated
+class IsUser(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if obj == request.user:
+            return True
+        return False

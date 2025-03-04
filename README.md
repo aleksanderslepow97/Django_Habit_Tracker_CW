@@ -4,6 +4,7 @@
 
 ## Для запуска проекта локально:
 
+- Клонируйте репозиторий https://github.com/aleksanderslepow97/Django_Habit_Tracker_CW/tree/develop4
 - Переименуйте файл .env.sample в .env и заполните его.
 - Создайте базу данных в PostgreSQL
 - Добавьте пользователя

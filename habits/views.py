@@ -1,51 +1,67 @@
-from django.core.exceptions import ValidationError
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
-
-from users.permissions import IsOwnerOrReadOnly
-
+from rest_framework import generics
 from .models import Habit
-from .paginations import HabitPagination
 from .serializers import HabitSerializer
+from .pagination import FiveItemsPaginator
+from users.permissions import IsOwner
+from rest_framework.permissions import IsAuthenticated
+from .services import send_telegram_message
 
 
-class HabitViewSet(ModelViewSet):
-    queryset = Habit.objects.all()
+class HabitCreateAPIView(generics.CreateAPIView):
+    """Создание"""
     serializer_class = HabitSerializer
-    pagination_class = HabitPagination
-
-    def get_queryset(self):
-        user = self.request.user
-        if self.request.query_params.get("public"):
-            return Habit.objects.filter(is_public=True)
-        return Habit.objects.filter(user=user)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except ValidationError as e:
-            return Response({"all": e.messages}, status=status.HTTP_400_BAD_REQUEST)
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    def get_permissions(self):
-        if self.action in ["update", "partial_update", "destroy"]:
-            permission_classes = [IsOwnerOrReadOnly]
-        else:
-            permission_classes = [IsAuthenticatedOrReadOnly]
 
-        return [permission() for permission in permission_classes]
+class HabitUpdateAPIView(generics.UpdateAPIView):
+    """Редактирование"""
+    serializer_class = HabitSerializer
+    queryset = Habit.objects.all()
+    permission_classes = [IsAuthenticated, IsOwner]
 
-    @action(detail=False, methods=["get"], url_path="public")
-    def list_public(self, request):
-        """Вывод только публичных привычек."""
-        public_habits = Habit.objects.filter(is_public=True)
-        serializer = self.get_serializer(public_habits, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class HabitDestroyAPIView(generics.DestroyAPIView):
+    """Удаление"""
+    serializer_class = HabitSerializer
+    queryset = Habit.objects.all()
+    permission_classes = [IsAuthenticated, IsOwner]
+
+
+class HabitRetrieveAPIView(generics.RetrieveAPIView):
+    """Одна привычка"""
+    serializer_class = HabitSerializer
+    queryset = Habit.objects.all()
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super().finalize_response(request, response, *args, **kwargs)
+        print(response.data.get('action'))
+        print(request.user.tg_chat_id)
+        send_telegram_message(request.user.tg_chat_id, response.data.get('action'))
+        return response
+
+
+class HabitListAPIView(generics.ListAPIView):
+    """Список привычек"""
+    serializer_class = HabitSerializer
+    queryset = Habit.objects.all()
+    pagination_class = FiveItemsPaginator
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Habit.objects.filter(user=user)
+
+
+class HabitPublicListAPIView(generics.ListAPIView):
+    """Список публичных привычек"""
+
+    serializer_class = HabitSerializer
+    pagination_class = FiveItemsPaginator
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Habit.objects.filter(is_public=True)

@@ -1,54 +1,31 @@
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 
 
-def validate_reward_and_related_habit(habit):
-    """Исключить одновременный выбор связанной привычки и указания вознаграждения."""
-    if habit.reward and habit.related_habit:
-        raise ValidationError(
-            _(
-                "Заполните только одно из двух полей: 'Награда' или 'Связанная привычка'."
-            )
-        )
+def validate_award_and_related_habit(attrs, fields):
+    filled_fields = [fields for field in fields if attrs.get(field) not in (None, '')]
+    if len(filled_fields) > 1:
+        raise serializers.ValidationError(f'Можно заполнить только одно из полей: {", ".join(fields)}.')
 
 
-def validate_duration(habit):
-    """Время выполнения должно быть не больше 120 секунд."""
-    if habit.duration is None:
-        raise ValidationError(
-            _("Продолжительность выполнения привычки не может быть пустой.")
-        )
-    if habit.duration > 120:
-        raise ValidationError(
-            _("Продолжительность выполнения привычки не может превышать 120 секунд.")
-        )
+def validate_execution_time(value):
+    if value not in range(120):
+        raise serializers.ValidationError('Время на выполнение должно быть не больше 2 минут')
 
 
-def validate_related_habit_pleasant(habit):
-    """В связанные привычки могут попадать только привычки с признаком приятной привычки."""
-    if habit.related_habit and not habit.related_habit.pleasant_habit:
-        raise ValidationError(
-            _("Связанные привычки должны быть с признаком 'Приятная привычка'.")
-        )
+def validate_periodicity(value):
+    if value not in range(1, 8):
+        raise serializers.ValidationError('Периодичность должна быть в пределах от 1 до 8 дней')
 
 
-def validate_pleasant_habit(habit):
-    """У приятной привычки не может быть вознаграждения или связанной привычки."""
-    if habit.pleasant_habit and (habit.reward or habit.related_habit):
-        raise ValidationError(
-            _(
-                "У приятной привычки не может быть вознаграждения или связанной привычки."
-            )
-        )
+def validate_related_habit(attrs, field_name='related_habit'):
+    related_habit = attrs.get(field_name)
+    if related_habit and not related_habit.is_pleasant_habit:
+        raise serializers.ValidationError(f'{field_name}: Связанная привычка должна быть отмечена как приятная')
 
 
-def validate_periodicity(habit):
-    """Нельзя выполнять привычку реже, чем 1 раз в 7 дней."""
-    if habit.periodicity < 1 or habit.periodicity > 7:
-        raise ValidationError(_("Периодичность должна быть от 1 до 7 дней."))
-
-
-def validate_habit_execution(habit):
-    """Нельзя не выполнять привычку более 7 дней."""
-    if habit.periodicity < 1 or habit.periodicity > 7:
-        raise ValidationError(_("Периодичность должна составлять от 1 до 7 дней."))
+def validate_pleasant_habit(attrs):
+    is_pleasant_habit = attrs.get('is_pleasant_habit')
+    related_habit = attrs.get('related_habit')
+    award = attrs.get('award')
+    if is_pleasant_habit and (related_habit or award):
+        raise serializers.ValidationError('У приятной привычки не может быть вознаграждения или связанной привычки')

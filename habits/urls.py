@@ -1,11 +1,15 @@
-from rest_framework.routers import SimpleRouter
+from django.urls import path
+from .views import (HabitPublicListAPIView, HabitCreateAPIView, HabitDestroyAPIView, HabitListAPIView,
+                    HabitUpdateAPIView, HabitRetrieveAPIView)
 
-from habits.apps import HabitsConfig
-from habits.views import HabitViewSet
+app_name = 'habits'
 
-app_name = HabitsConfig.name
 
-router = SimpleRouter()
-router.register(r"", HabitViewSet, basename="habits")
-
-urlpatterns = [] + router.urls
+urlpatterns = [
+    path("", HabitListAPIView.as_view(), name="habit_list"),
+    path("habit/<int:pk>", HabitRetrieveAPIView.as_view(), name="habit_retrieve"),
+    path("habit/create", HabitCreateAPIView.as_view(), name="habit_create"),
+    path("habit/<int:pk>/update", HabitUpdateAPIView.as_view(), name="habit_update"),
+    path("habit/<int:pk>/delete", HabitDestroyAPIView.as_view(), name="habit_delete"),
+    path("habit/public/", HabitPublicListAPIView.as_view(), name="habit_public_list"),
+]

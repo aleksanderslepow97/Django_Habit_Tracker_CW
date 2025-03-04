@@ -1,0 +1,38 @@
+[
+{
+    "model": "users.user",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$870000$LMnxj3rBLF4B60vhHjQkds$63I/hT4BwUu2TEkZwo4Hp4d7XHQSz8i7qOGPgmuHOao=",
+        "last_login": "2025-02-10T08:00:31Z",
+        "is_superuser": true,
+        "first_name": "",
+        "last_name": "",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2025-02-04T15:06:04Z",
+        "email": "admin@admin.ru",
+        "tg_chat_id": "1825646021",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+        "password": "34abetass",
+        "last_login": "2025-02-10T08:01:32Z",
+        "is_superuser": false,
+        "first_name": "",
+        "last_name": "",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2025-02-10T08:01:24Z",
+        "email": "m.fedyayev.02@mail.ru",
+        "tg_chat_id": null,
+        "groups": [],
+        "user_permissions": []
+    }
+}
+]

@@ -1,22 +1,8 @@
 from django.contrib import admin
+from django.apps import apps
 
-from habits.models import Habit
 
+app = apps.get_app_config("habits")
 
-@admin.register(Habit)
-class HabitAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "user",
-        "action",
-        "time",
-        "place",
-        "reward",
-        "pleasant_habit",
-        "related_habit",
-        "periodicity",
-        "duration",
-        "is_public",
-    )
-    list_filter = ("action",)
-    search_fields = ("action",)
+for model in app.models.values():
+    admin.site.register(model)

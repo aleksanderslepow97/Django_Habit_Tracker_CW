@@ -1,40 +1,21 @@
 import requests
-from django.utils import timezone
+from config.settings import BOT_TOKEN
+import logging
 
-from config.settings import TELEGRAM_BOT_TOKEN, TELEGRAM_URL
-from habits.models import Habit
-
-
-def send_tg_message(message, chat_id):
-    """Функция отправки сообщения в Телерамм"""
-    params = {
-        "text": message,
-        "chat_id": chat_id,
-    }
-    requests.get(f"{TELEGRAM_URL}{TELEGRAM_BOT_TOKEN}/sendMessage", params=params)
+logger = logging.getLogger(__name__)
 
 
-def message_generator(user):
-    """Функция генерирует сообщения пользователю с напоминаниями о привычках."""
-    current_time = timezone.now()
+def send_telegram_message(chat_id, message):
+    """Сервис для отправки напоминаний в телеграм"""
 
-    habits = Habit.objects.filter(user=user, time__gte=current_time)
+    params = {"text": message,
+              "chat_id": chat_id}
 
-    user_dict = {}
-    for habit in habits:
-        if habit.user.tg_chat_id:
-            message = (
-                f"Напоминание: '{habit.action}' "
-                f"в {habit.time.strftime('%H:%M')} "
-                f"в месте: '{habit.place}'."
-            )
-
-            if habit.reward:
-                message += f" Награда: '{habit.reward}'."
-
-            user_dict = {
-                "chat_id": habit.user.tg_chat_id,
-                "message": message,
-            }
-
-    return user_dict
+    try:
+        response = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", params=params)
+        if response.status_code == 200:
+            logger.info(f"Сообщение успешно отправлено в чат {chat_id}")
+        else:
+            logger.error(f"Ошибка отправки сообщения: {response.status_code}, {response.text}")
+    except Exception as e:
+        logger.error(f"Ошибка при отправке сообщения: {e}")
