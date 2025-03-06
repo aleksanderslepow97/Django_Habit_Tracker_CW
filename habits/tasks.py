@@ -1,43 +1,29 @@
+from datetime import datetime, timedelta
+
+import pytz
 from celery import shared_task
-from .services import send_telegram_message
-from .models import Habit
-from django_celery_beat.models import ClockedSchedule, PeriodicTask
-from django.utils import timezone
-import json
+
+from config import settings
+from habit.models import Habit
+from habit.services import send_telegram_message
 
 
 @shared_task
-def send_habit_reminder(habit_id):
-    """Отправка напоминания и создание следующей задачи"""
-    try:
-        habit = Habit.objects.get(pk=habit_id)
-        # отправка сообщения в tg
-        if habit.user and habit.user.tg_chat_id:
-            message = (
-                f"Напоминание: {habit.action} в {habit.location} в {habit.time.strftime('%H:%M')}.\n"
-                f"Не забудьте про награду: {habit.award}!")
-            send_telegram_message(habit.user.tg_chat_id, message)
+def send_information_telegram():
+    """Отправляет пользователю напоминание о привычке."""
+    time_zone = pytz.timezone(settings.TIME_ZONE)
+    print(time_zone)
+    current_time = datetime.now(time_zone)
+    print(current_time)
 
-        # cоздание новой задачи на следующий день
-        now = timezone.now()
-        next_execution = timezone.datetime.combine(
-            now.date() + timezone.timedelta(days=habit.periodicity), habit.time)
-
-        # преобразуем в осведомленное время, если оно наивное
-        if timezone.is_naive(next_execution):
-            next_execution = timezone.make_aware(next_execution)
-
-        # следующий день
-        if next_execution < now:
-            next_execution += timezone.timedelta(days=habit.periodicity)
-
-        clocked_schedule, _ = ClockedSchedule.objects.get_or_create(clocked_time=next_execution)
-
-        PeriodicTask.objects.create(
-            clocked=clocked_schedule,
-            name=f"Напоминание о привычке {habit.pk} - {next_execution}",
-            task="habits.tasks.send_habit_reminder",
-            args=json.dumps([habit.pk]),
-            one_off=True,)
-    except Habit.DoesNotExist:
-        pass
+    # Фильтруем привычки в диапазоне следующего часа
+    start_time = current_time.time()
+    print(start_time)
+    end_time = (datetime.now(time_zone) + timedelta(hours=1)).time()
+    print(end_time)
+    habits = Habit.objects.filter(time_habit__range=(start_time, end_time))
+    print(habits)
+    for habit in habits:
+        user = habit.owner.tg_chat_id
+        message = f"Вам необходимо сделать {habit.action} в {habit.time_habit} в {habit.location}."
+        send_telegram_message(user, message)

@@ -1,67 +1,54 @@
-from rest_framework import generics
-from .models import Habit
-from .serializers import HabitSerializer
-from .pagination import FiveItemsPaginator
+from rest_framework.generics import ListAPIView
+from rest_framework.viewsets import ModelViewSet
+
+from habit.models import Habit
+from habit.paginations import CustomPagination
+from habit.serializers import (HabitpublicitySerializer, HabitSerializer,
+                               UserHabitSerializer)
 from users.permissions import IsOwner
-from rest_framework.permissions import IsAuthenticated
-from .services import send_telegram_message
 
 
-class HabitCreateAPIView(generics.CreateAPIView):
-    """Создание"""
+class HabitViewSet(ModelViewSet):
+    """Вьюсет для модели Привычка."""
+
+    queryset = Habit.objects.all()
     serializer_class = HabitSerializer
-    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
+
+    """Метод для управления созданием объекта и автом привязки создаваемого объекта к авторизованному пользователю."""
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        habit = serializer.save()
+        habit.owner = self.request.user
+        habit.save()
+
+    def get_permissions(self):
+        """Метод определения действий в зависимости является ли пользователь владельцем."""
+        if self.action in ["update", "retrieve"]:
+            self.permission_classes = (IsOwner,)
+        elif self.action == "destroy":
+            self.permission_classes = (IsOwner,)
+        return super().get_permissions()
 
 
-class HabitUpdateAPIView(generics.UpdateAPIView):
-    """Редактирование"""
-    serializer_class = HabitSerializer
-    queryset = Habit.objects.all()
-    permission_classes = [IsAuthenticated, IsOwner]
+class HabitpublicityListAPIView(ListAPIView):
+    """Эндпоинт для списка публичных привычек."""
 
-
-class HabitDestroyAPIView(generics.DestroyAPIView):
-    """Удаление"""
-    serializer_class = HabitSerializer
-    queryset = Habit.objects.all()
-    permission_classes = [IsAuthenticated, IsOwner]
-
-
-class HabitRetrieveAPIView(generics.RetrieveAPIView):
-    """Одна привычка"""
-    serializer_class = HabitSerializer
-    queryset = Habit.objects.all()
-    permission_classes = [IsAuthenticated, IsOwner]
-
-    def finalize_response(self, request, response, *args, **kwargs):
-        response = super().finalize_response(request, response, *args, **kwargs)
-        print(response.data.get('action'))
-        print(request.user.tg_chat_id)
-        send_telegram_message(request.user.tg_chat_id, response.data.get('action'))
-        return response
-
-
-class HabitListAPIView(generics.ListAPIView):
-    """Список привычек"""
-    serializer_class = HabitSerializer
-    queryset = Habit.objects.all()
-    pagination_class = FiveItemsPaginator
-    permission_classes = [IsAuthenticated, IsOwner]
+    serializer_class = HabitpublicitySerializer
+    pagination_class = CustomPagination
 
     def get_queryset(self):
+        """Метод фильтрует привычки по статусу публикации"""
+        return Habit.objects.filter(publicity="Опубликована", owner=self.request.user)
+
+
+class UserhabitListAPIView(ListAPIView):
+    """Эндпоинт для списка привычек текущего пользователя."""
+
+    serializer_class = UserHabitSerializer
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        """Метод фильтрует привычки по текущему пользователю."""
         user = self.request.user
-        return Habit.objects.filter(user=user)
-
-
-class HabitPublicListAPIView(generics.ListAPIView):
-    """Список публичных привычек"""
-
-    serializer_class = HabitSerializer
-    pagination_class = FiveItemsPaginator
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return Habit.objects.filter(is_public=True)
+        return Habit.objects.filter(owner=user)

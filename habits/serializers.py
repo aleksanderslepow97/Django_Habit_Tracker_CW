@@ -1,19 +1,49 @@
 from rest_framework import serializers
-from .validators import (validate_award_and_related_habit, validate_execution_time,
-                         validate_related_habit, validate_periodicity, validate_pleasant_habit)
-from .models import Habit
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
+
+from habit.models import Habit
+from habit.validators import (HabitValidator, PleasantHabitValidator,
+                              RelatedHabitValidator, ValidatorTime,
+                              WeeklyHabitValidator)
 
 
 class HabitSerializer(serializers.ModelSerializer):
-    execution_time = serializers.IntegerField(default=0, validators=[validate_execution_time])
-    periodicity = serializers.IntegerField(default=1, validators=[validate_periodicity])
+    validators = [
+        ValidatorTime(field="time_to_complete"),
+        WeeklyHabitValidator(),
+        HabitValidator(),
+        PleasantHabitValidator(),
+        RelatedHabitValidator(),
+    ]
 
-    def validate(self, attrs):
-        validate_award_and_related_habit(attrs, fields=['related_habit', 'award'])
-        validate_related_habit(attrs, field_name='related_habit')
-        validate_pleasant_habit(attrs)
+    class Meta:
+        model = Habit
+        fields = "__all__"
 
-        return attrs
+
+class HabitpublicitySerializer(ModelSerializer):
+    habitpublicity = SerializerMethodField()
+
+    class Meta:
+        model = Habit
+        fields = "__all__"
+
+    def get_habitpublicity(self, obj):
+        """Метод фильтрует привычки пользователя по статусу публикации."""
+        user = self.context["request"].user
+        return [
+            habit.habit
+            for habit in Habit.objects.filter(owner=user, publicity="Опубликована")
+        ]
+
+
+class UserHabitSerializer(ModelSerializer):
+    habituser = SerializerMethodField()
+
+    def get_habituser(self, obj):
+        """Метод фильтрует привычки  ntreotuj пользователя ."""
+        user = self.context["request"].user
+        return [habit.habit for habit in Habit.objects.filter(owner=user)]
 
     class Meta:
         model = Habit

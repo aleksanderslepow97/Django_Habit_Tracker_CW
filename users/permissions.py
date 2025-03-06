@@ -2,14 +2,9 @@ from rest_framework import permissions
 
 
 class IsOwner(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if obj.user == request.user:
-            return True
-        return False
+    """Проверяет является ли пользователь владельцем."""
 
-
-class IsUser(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        if obj == request.user:
+        if obj.owner == request.user:
             return True
         return False
