@@ -1,0 +1,146 @@
+[
+{
+    "model": "habits.habit",
+    "pk": 12,
+    "fields": {
+        "user": 1,
+        "location": "Где угодно",
+        "time": "12:00:00",
+        "action": "Разминка",
+        "is_pleasant_habit": false,
+        "related_habit": null,
+        "periodicity": 1,
+        "award": null,
+        "execution_time": 60,
+        "is_public": false
+    }
+},
+{
+    "model": "habits.habit",
+    "pk": 13,
+    "fields": {
+        "user": 1,
+        "location": "Где угодно",
+        "time": "14:00:00",
+        "action": "Покормить собакена",
+        "is_pleasant_habit": true,
+        "related_habit": null,
+        "periodicity": 1,
+        "award": null,
+        "execution_time": 40,
+        "is_public": false
+    }
+},
+{
+    "model": "habits.habit",
+    "pk": 14,
+    "fields": {
+        "user": 2,
+        "location": "Где угодно",
+        "time": "06:00:00",
+        "action": "Сверлить",
+        "is_pleasant_habit": false,
+        "related_habit": null,
+        "periodicity": 1,
+        "award": null,
+        "execution_time": 10,
+        "is_public": true
+    }
+},
+{
+    "model": "habits.habit",
+    "pk": 15,
+    "fields": {
+        "user": 2,
+        "location": "Где угодно",
+        "time": "06:30:00",
+        "action": "Пробежка от соседей",
+        "is_pleasant_habit": false,
+        "related_habit": 14,
+        "periodicity": 1,
+        "award": "капкан под дверью",
+        "execution_time": 0,
+        "is_public": true
+    }
+},
+{
+    "model": "habits.habit",
+    "pk": 16,
+    "fields": {
+        "user": 2,
+        "location": "Где угодно",
+        "time": "17:32:00",
+        "action": "выпить таблетки от шизофрении",
+        "is_pleasant_habit": true,
+        "related_habit": null,
+        "periodicity": 1,
+        "award": "пропал лучший друг виталик",
+        "execution_time": 52,
+        "is_public": true
+    }
+},
+{
+    "model": "habits.habit",
+    "pk": 17,
+    "fields": {
+        "user": 1,
+        "location": "Где угодно",
+        "time": "18:24:32",
+        "action": "скушать чипсы (лэйс)",
+        "is_pleasant_habit": true,
+        "related_habit": 18,
+        "periodicity": 1,
+        "award": "гастрит",
+        "execution_time": 30,
+        "is_public": false
+    }
+},
+{
+    "model": "habits.habit",
+    "pk": 18,
+    "fields": {
+        "user": 1,
+        "location": "Где угодно",
+        "time": "18:26:32",
+        "action": "выпить таблетки от гастрита",
+        "is_pleasant_habit": false,
+        "related_habit": 17,
+        "periodicity": 1,
+        "award": null,
+        "execution_time": 10,
+        "is_public": false
+    }
+},
+{
+    "model": "habits.habit",
+    "pk": 19,
+    "fields": {
+        "user": 2,
+        "location": "Где угодно",
+        "time": "19:28:40",
+        "action": "посмотреть стрим папича",
+        "is_pleasant_habit": true,
+        "related_habit": null,
+        "periodicity": 2,
+        "award": "стал аскетом)",
+        "execution_time": 52,
+        "is_public": true
+    }
+},
+{
+    "model": "habits.habit",
+    "pk": 20,
+    "fields": {
+        "user": 1,
+        "location": "Где угодно",
+        "time": "15:00:00",
+        "action": "Выгулять собаку",
+        "is_pleasant_habit": true,
+        "related_habit": 13,
+        "periodicity": 1,
+        "award": "квартира не обосранна",
+        "execution_time": 0,
+        "is_public": false
+    }
+}
+]
